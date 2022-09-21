@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:task2/features/task1/task1.dart';
+import 'package:task2/features/task3/task3.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -20,6 +21,17 @@ class HomePage extends StatelessWidget {
                 );
               },
               child: const Text('Task1'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const Task3Page(),
+                  ),
+                );
+              },
+              child: const Text('Task 3'),
             ),
           ],
         ),

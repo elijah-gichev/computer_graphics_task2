@@ -49,11 +49,30 @@ img_lib.Image convertToHSV(img_lib.Image src) {
   return src;
 }
 
-List<int> RGBtoHSV(int r, int g, int b) {
-  int maxValue = max(r, max(g, b));
-  int minValue = min(r, min(g, b));
+List<int> RGBtoHSV(int r1, int g1, int b1) {
+  final double r = r1 / 255.0;
+  final double g = g1 / 255.0;
+  final double b = b1 / 255.0;
+
+  final double maxValue = max(r, max(g, b));
+  final double minValue = min(r, min(g, b));
+
+  final double value = maxValue * 100;
+  final double saturation = maxValue == 0 ? 0 : (1 - minValue / maxValue);
+
+  double hue = 0;
+  final double denominator = maxValue - minValue;
+
   if (minValue == maxValue) {
-    return [r, g, b];
+    hue = 0;
+  } else if (maxValue == r && g >= b) {
+    hue = (60 * ((g - b) / denominator)) % 360;
+  } else if (maxValue == r && g < b) {
+    hue = (60 * ((g - b) ~/ denominator) + 360) % 360;
+  } else if (maxValue == g) {
+    hue = (60 * ((b - r) ~/ denominator) + 120) % 360;
+  } else if (maxValue == b) {
+    hue = (60 * ((r - g) ~/ denominator) + 240) % 360;
   }
-  return [1, 2, 3];
+  return [hue.toInt(), saturation.toInt(), value.toInt()];
 }
