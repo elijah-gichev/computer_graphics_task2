@@ -1,10 +1,13 @@
 import 'dart:io';
+
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as extended_image;
+import 'package:task2/features/task1/simple_chart.dart';
 
-final List<int> intensityList1 = [];
-final List<int> intensityList2 = [];
+List<int> intensityList1 = [];
+List<int> intensityList2 = [];
 
 //1) Преобразовать изображение из RGB в оттенки серого. Реализовать два варианта формулы
 //с учетом разных вкладов R, G и B в интенсивность (см презентацию).
@@ -16,6 +19,24 @@ final List<int> intensityList2 = [];
 //3) int getLuminanceRgb(int r, int g, int b) =>
 //    (0.299 * r + 0.587 * g + 0.114 * b).round();
 
+List<charts.Series<OrdinalSales, String>> _createSampleData(
+    List<int> intensityList) {
+  final data = <OrdinalSales>[];
+  for (int i = 0; i <= 255; i++) {
+    int test = intensityList.where((element) => element == i).length;
+    data.add(OrdinalSales(i.toString(), test));
+  }
+  return [
+    charts.Series<OrdinalSales, String>(
+      id: 'Sales',
+      colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+      domainFn: (OrdinalSales sales, _) => sales.year,
+      measureFn: (OrdinalSales sales, _) => sales.sales,
+      data: data,
+    )
+  ];
+}
+
 class Task1 extends StatelessWidget {
   const Task1({super.key});
 
@@ -25,48 +46,67 @@ class Task1 extends StatelessWidget {
     grayscale1(extended_image.decodeJpg(file)!);
     return Scaffold(
       appBar: AppBar(),
-      //body: SingleChildScrollView(
-      // child: Row(
-      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //   children: [
-      //     Image.memory(
-      //       file,
-      //       height: 400,
-      //       width: 400,
-      //     ),
-      //     Column(
-      //       mainAxisSize: MainAxisSize.min,
-      //       children: [
-      //         Image.memory(
-      //           Uint8List.fromList(extended_image
-      //               .encodeJpg(grayscale1(extended_image.decodeJpg(file)!))),
-      //           height: 400,
-      //           width: 400,
-      //         ),
-      //         TimeSeriesBar([])
-      //       ],
-      //     ),
-      //     Column(
-      //       mainAxisSize: MainAxisSize.min,
-      //       children: [
-      //         Image.memory(
-      //           Uint8List.fromList(extended_image
-      //               .encodeJpg(grayscale2(extended_image.decodeJpg(file)!))),
-      //           height: 400,
-      //           width: 400,
-      //         ),
-      //       ],
-      //     ),
-      //   ],
-      // ),
-      body: TimeSeriesBar([]),
-      //),
+      body: SingleChildScrollView(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.memory(
+              file,
+              height: 400,
+              width: 400,
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.memory(
+                  Uint8List.fromList(extended_image
+                      .encodeJpg(grayscale1(extended_image.decodeJpg(file)!))),
+                  height: 400,
+                  width: 400,
+                ),
+                SizedBox(
+                  height: 300,
+                  width: 300,
+                  child: SimpleChart(
+                    _createSampleData(
+                      intensityList1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.memory(
+                  Uint8List.fromList(extended_image
+                      .encodeJpg(grayscale2(extended_image.decodeJpg(file)!))),
+                  height: 400,
+                  width: 400,
+                ),
+                SizedBox(
+                  height: 300,
+                  width: 300,
+                  child: SimpleChart(
+                    _createSampleData(
+                      intensityList2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      //body: TimeSeriesBar([]),
     );
   }
 }
 
 extended_image.Image grayscale1(extended_image.Image src) {
   final p = src.getBytes();
+  intensityList1 = [];
   for (var i = 0, len = p.length; i < len; i += 4) {
     final l = getLuminanceRgb1(p[i], p[i + 1], p[i + 2]);
     p[i] = l;
@@ -80,6 +120,7 @@ extended_image.Image grayscale1(extended_image.Image src) {
 
 extended_image.Image grayscale2(extended_image.Image src) {
   final p = src.getBytes();
+  intensityList2 = [];
   for (var i = 0, len = p.length; i < len; i += 4) {
     final l = getLuminanceRgb2(p[i], p[i + 1], p[i + 2]);
     p[i] = l;
