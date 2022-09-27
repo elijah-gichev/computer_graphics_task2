@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as extended_image;
+import 'package:flutter/services.dart' as s;
 
 final List<int> intensityList1 = [];
 final List<int> intensityList2 = [];
@@ -21,47 +22,83 @@ class Task1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final file = File('assets/1.jpg').readAsBytesSync();
-    grayscale1(extended_image.decodeJpg(file)!);
+    print(Directory.current);
+    final res = s.rootBundle.load('assets/sample.jpg');
+
+    //final file = File('assets/sample.jpg').readAsBytesSync();
+    //grayscale1(extended_image.decodeJpg(file)!);
     return Scaffold(
-      appBar: AppBar(),
-      //body: SingleChildScrollView(
-      // child: Row(
-      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //   children: [
-      //     Image.memory(
-      //       file,
-      //       height: 400,
-      //       width: 400,
-      //     ),
-      //     Column(
-      //       mainAxisSize: MainAxisSize.min,
-      //       children: [
-      //         Image.memory(
-      //           Uint8List.fromList(extended_image
-      //               .encodeJpg(grayscale1(extended_image.decodeJpg(file)!))),
-      //           height: 400,
-      //           width: 400,
-      //         ),
-      //         TimeSeriesBar([])
-      //       ],
-      //     ),
-      //     Column(
-      //       mainAxisSize: MainAxisSize.min,
-      //       children: [
-      //         Image.memory(
-      //           Uint8List.fromList(extended_image
-      //               .encodeJpg(grayscale2(extended_image.decodeJpg(file)!))),
-      //           height: 400,
-      //           width: 400,
-      //         ),
-      //       ],
-      //     ),
-      //   ],
-      // ),
-      body: TimeSeriesBar([]),
-      //),
-    );
+        appBar: AppBar(),
+        //body: SingleChildScrollView(
+        // child: Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     Image.memory(
+        //       file,
+        //       height: 400,
+        //       width: 400,
+        //     ),
+        //     Column(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         Image.memory(
+        //           Uint8List.fromList(extended_image
+        //               .encodeJpg(grayscale1(extended_image.decodeJpg(file)!))),
+        //           height: 400,
+        //           width: 400,
+        //         ),
+        //         TimeSeriesBar([])
+        //       ],
+        //     ),
+        //     Column(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         Image.memory(
+        //           Uint8List.fromList(extended_image
+        //               .encodeJpg(grayscale2(extended_image.decodeJpg(file)!))),
+        //           height: 400,
+        //           width: 400,
+        //         ),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+        body: Image.asset('assets/sample.jpg') //TimeSeriesBar([]),
+        //),
+        );
+  }
+
+  Future<Map<int, int>> countFreq() async {
+    final res = await s.rootBundle.load('assets/sample.jpg');
+    final p = res.buffer.asUint8List();
+
+    final freqs = <int, int>{};
+
+    for (var i = 0, len = p.length; i < len; i += 4) {
+      final r = p[i];
+      final g = p[i + 1];
+      final b = p[i + 2];
+
+      if (freqs[r] != null) {
+        freqs[r] = freqs[r]! + 1;
+      } else {
+        freqs[r] = 1;
+      }
+
+      if (freqs[g] != null) {
+        freqs[g] = freqs[g]! + 1;
+      } else {
+        freqs[g] = 1;
+      }
+
+      if (freqs[b] != null) {
+        freqs[b] = freqs[b]! + 1;
+      } else {
+        freqs[b] = 1;
+      }
+    }
+
+    return freqs;
   }
 }
 
