@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   image: ^3.2.0
   charts_flutter: ^0.12.0
+  flutter_charts: ^0.5.0
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +62,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/sample.jpg
+    - assets/
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
