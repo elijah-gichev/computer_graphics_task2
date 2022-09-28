@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as extended_image;
 import 'package:flutter/services.dart' as s;
+import 'package:image/image.dart' as extended_image;
 import 'package:task2/features/task1/simple_chart.dart';
 
 List<int> intensityList1 = [];
@@ -45,9 +45,9 @@ class Task1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print(Directory.current);
-    final res = s.rootBundle.load('assets/sample.jpg');
+    final res = s.rootBundle.load('assets/1.jpg');
 
-    final file = File('assets/sample.jpg').readAsBytesSync();
+    final file = File('assets/1.jpg').readAsBytesSync();
     //grayscale1(extended_image.decodeJpg(file)!);
     return Scaffold(
       appBar: AppBar(),

@@ -24,6 +24,9 @@ class _Task2State extends State<Task2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Task 2'),
+      ),
       body: Center(
         child: Row(
           children: [
@@ -68,7 +71,7 @@ class _Task2State extends State<Task2> {
     Map<int, int> gFreqs,
     Map<int, int> bFreqs,
   ) async {
-    final bytes = await s.rootBundle.load('assets/sample.jpg');
+    final bytes = await s.rootBundle.load('assets/1.jpg');
     final p =
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
 
