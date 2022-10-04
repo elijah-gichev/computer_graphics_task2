@@ -56,10 +56,22 @@ class Task1 extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.memory(
-              file,
-              height: 400,
-              width: 400,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.memory(
+                  file,
+                  height: 400,
+                  width: 400,
+                ),
+                Image.memory(
+                  Uint8List.fromList(extended_image.encodeJpg(
+                      grayscale1(extended_image.decodeJpg(file)!) -
+                          grayscale2(extended_image.decodeJpg(file)!))),
+                  height: 400,
+                  width: 400,
+                ),
+              ],
             ),
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -136,6 +148,9 @@ extended_image.Image grayscale2(extended_image.Image src) {
   //print(intensityList2);
   return src;
 }
+
+//int difference (int r, int g, int b) =>
+//    (grayscale1(extended_image.decodeJpg(file)!) - grayscale1(extended_image.decodeJpg(file)!)).round();
 
 int getLuminanceRgb1(int r, int g, int b) =>
     (0.299 * r + 0.587 * g + 0.114 * b).round();
