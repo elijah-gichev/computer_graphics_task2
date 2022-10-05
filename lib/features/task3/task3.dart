@@ -13,26 +13,28 @@ class Task3Page extends StatefulWidget {
 }
 
 class _Task3PageState extends State<Task3Page> {
-  late final img_lib.Image newImage;
-  late final img_lib.Image image;
+  late final img_lib.Image imageHSV;
   double _hueValue = 0;
   double _satValue = 0;
   double _valValue = 0;
-  late final Uint8List originalBytes;
 
   @override
   void initState() {
-    image = img_lib.decodeJpg(File('assets/1.jpg').readAsBytesSync())!;
-    newImage = convertToHSV(image);
-    originalBytes = image.getBytes();
-    //237489790
-    print(originalBytes.reduce((value, element) => value + element));
-    // var a = HSVColor.fromColor(Color.fromRGBO(222, 44, 111, 1));
-    // var b = RGBtoHSV(222, 44, 111);
-    // print("hue : ${a.hue} saturation : ${a.saturation} value : ${a.value}");
-    // print("hue2 : ${b[0]} saturation : ${b[1]} value : ${b[2]}");
+    imageHSV = convertToHSV(
+        img_lib.decodeJpg(File('assets/1.jpg').readAsBytesSync())!);
+
+    File('test.jpg')
+        .writeAsBytesSync(img_lib.encodeJpg(convertToRGB(imageHSV)));
+
+    //
+    var a = HSVColor.fromColor(const Color.fromRGBO(222, 44, 111, 1));
+    var b = RGBtoHSV(222, 44, 111);
+    print("hue : ${a.hue} saturation : ${a.saturation} value : ${a.value}");
+    print("hue2 : ${b.hue} saturation : ${b.saturation} value : ${b.value}");
     //RGV TO HSV CORRECT
-    //print(HSVToRGB(337, 80, 87));
+    print(HSVToRGB(337, 80, 87).red);
+    print(HSVToRGB(337, 80, 87).green);
+    print(HSVToRGB(337, 80, 87).blue);
     super.initState();
   }
 
@@ -60,23 +62,27 @@ class _Task3PageState extends State<Task3Page> {
             children: [
               InkWell(
                 onTap: () {
-                  File('test.jpg').writeAsBytesSync(
-                      img_lib.encodeJpg(convertToRGB(newImage)));
+                  setState(() {
+                    File('test.jpg').writeAsBytesSync(
+                        img_lib.encodeJpg(convertToRGB(imageHSV)));
+                  });
                 },
                 child: Image.memory(
-                  Uint8List.fromList(img_lib.encodeJpg(newImage)),
+                  File('test.jpg').readAsBytesSync(),
+                  // Uint8List.fromList(img_lib.encodeJpg(image)),
                   height: 300,
                   width: 300,
                 ),
               ),
               Slider(
                 label: 'Hue',
-                max: 255,
+                min: -360,
+                max: 360,
                 value: _hueValue,
                 onChanged: (double newValue) {
                   setState(() {
                     _changeHue(
-                        image,
+                        imageHSV,
                         newValue > _hueValue
                             ? (newValue - _hueValue).toInt()
                             : (_hueValue - newValue).toInt());
@@ -86,29 +92,29 @@ class _Task3PageState extends State<Task3Page> {
               ),
               Slider(
                 label: 'Saturation',
-                max: 255,
+                min: -100,
+                max: 100,
                 value: _satValue,
                 onChanged: (double newValue) {
                   setState(() {
                     _changeSat(
-                        image,
+                        imageHSV,
                         newValue >= _satValue
                             ? (newValue - _satValue).toInt()
                             : (_satValue - newValue).toInt());
                     _satValue = newValue;
-                    print(originalBytes
-                        .reduce((value, element) => value + element));
                   });
                 },
               ),
               Slider(
                 label: 'Value',
-                max: 255,
+                min: -100,
+                max: 100,
                 value: _valValue,
                 onChanged: (double newValue) {
                   setState(() {
                     _changeVal(
-                        image,
+                        imageHSV,
                         newValue > _valValue
                             ? (newValue - _valValue).toInt()
                             : (_valValue - newValue).toInt());
@@ -128,26 +134,27 @@ img_lib.Image convertToHSV(img_lib.Image src) {
   final p = src.getBytes();
   for (var i = 0, len = p.length; i < len; i += 4) {
     final l = RGBtoHSV(p[i], p[i + 1], p[i + 2]);
-    p[i] = l[0];
-    p[i + 1] = l[1];
-    p[i + 2] = l[2];
+    p[i] = l.hue;
+    p[i + 1] = l.saturation;
+    p[i + 2] = l.value;
   }
   return src;
 }
 
 img_lib.Image convertToRGB(img_lib.Image src) {
   final p = src.getBytes();
-  for (var i = 0, len = p.length; i < len; i += 4) {
-    final l = HSVToRGB(p[i].toDouble() / 255 * 360,
-        p[i + 1].toDouble() / 255 * 100, p[i + 2].toDouble() / 255 * 100);
+  final Uint8List res = Uint8List.fromList(p);
+  for (var i = 0, len = res.length; i < len; i += 4) {
+    final l = HSVToRGB(
+        res[i].toDouble(), res[i + 1].toDouble(), res[i + 2].toDouble());
     p[i] = l.red;
     p[i + 1] = l.green;
     p[i + 2] = l.blue;
   }
-  return src;
+  return img_lib.Image.fromBytes(src.width, src.height, p);
 }
 
-List<int> RGBtoHSV(int r1, int g1, int b1) {
+MyHSVColor RGBtoHSV(int r1, int g1, int b1) {
   final double r = r1 / 255.0;
   final double g = g1 / 255.0;
   final double b = b1 / 255.0;
@@ -174,20 +181,15 @@ List<int> RGBtoHSV(int r1, int g1, int b1) {
     hue = (60 * ((r - g) / denominator) + 240) % 360;
   }
 
-  //Convert HSV [360, 100, 100] to HSV [256, 256, 256]
-  final int h_256 = ((hue / 360) * 255).toInt();
-  final int s_256 = ((saturation / 100) * 255).toInt();
-  final int v_256 = ((value / 100) * 255).toInt();
-
-  return [h_256, s_256, v_256];
+  return MyHSVColor(hue.toInt(), saturation.toInt(), value.toInt());
 }
 
 Color HSVToRGB(double H, double S, double V) {
   int R, G, B;
 
-  H /= 360;
-  S /= 100;
-  V /= 100;
+  H = (H % 360) / 360;
+  S = S > 100 ? 100 : S / 100;
+  V = V > 100 ? 100 : V / 100;
 
   if (S == 0) {
     R = (V * 255).toInt();
@@ -259,4 +261,12 @@ void _changeVal(img_lib.Image image, int value) {
     p[i + 2] = p[i + 2] + value;
   }
   return;
+}
+
+class MyHSVColor {
+  final int hue;
+  final int saturation;
+  final int value;
+
+  MyHSVColor(this.hue, this.saturation, this.value);
 }
