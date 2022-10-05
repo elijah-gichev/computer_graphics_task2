@@ -5,6 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img_lib;
 
+double _hueValue = 0;
+double _satValue = 0;
+double _valValue = 0;
+
 class Task3Page extends StatefulWidget {
   const Task3Page({Key? key}) : super(key: key);
 
@@ -14,17 +18,15 @@ class Task3Page extends StatefulWidget {
 
 class _Task3PageState extends State<Task3Page> {
   late final img_lib.Image imageHSV;
-  double _hueValue = 0;
-  double _satValue = 0;
-  double _valValue = 0;
 
   @override
   void initState() {
     imageHSV = convertToHSV(
         img_lib.decodeJpg(File('assets/1.jpg').readAsBytesSync())!);
 
-    File('test.jpg')
-        .writeAsBytesSync(img_lib.encodeJpg(convertToRGB(imageHSV)));
+    File('test.jpg').writeAsBytesSync(img_lib.encodeJpg(convertToRGB(
+      imageHSV,
+    )));
 
     //
     var a = HSVColor.fromColor(const Color.fromRGBO(222, 44, 111, 1));
@@ -32,9 +34,6 @@ class _Task3PageState extends State<Task3Page> {
     print("hue : ${a.hue} saturation : ${a.saturation} value : ${a.value}");
     print("hue2 : ${b.hue} saturation : ${b.saturation} value : ${b.value}");
     //RGV TO HSV CORRECT
-    print(HSVToRGB(337, 80, 87).red);
-    print(HSVToRGB(337, 80, 87).green);
-    print(HSVToRGB(337, 80, 87).blue);
     super.initState();
   }
 
@@ -60,19 +59,10 @@ class _Task3PageState extends State<Task3Page> {
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    File('test.jpg').writeAsBytesSync(
-                        img_lib.encodeJpg(convertToRGB(imageHSV)));
-                  });
-                },
-                child: Image.memory(
-                  File('test.jpg').readAsBytesSync(),
-                  // Uint8List.fromList(img_lib.encodeJpg(image)),
-                  height: 300,
-                  width: 300,
-                ),
+              Image.memory(
+                File('test.jpg').readAsBytesSync(),
+                height: 300,
+                width: 300,
               ),
               Slider(
                 label: 'Hue',
@@ -81,11 +71,7 @@ class _Task3PageState extends State<Task3Page> {
                 value: _hueValue,
                 onChanged: (double newValue) {
                   setState(() {
-                    _changeHue(
-                        imageHSV,
-                        newValue > _hueValue
-                            ? (newValue - _hueValue).toInt()
-                            : (_hueValue - newValue).toInt());
+                    _changeHue(imageHSV, newValue.toInt());
                     _hueValue = newValue;
                   });
                 },
@@ -98,10 +84,9 @@ class _Task3PageState extends State<Task3Page> {
                 onChanged: (double newValue) {
                   setState(() {
                     _changeSat(
-                        imageHSV,
-                        newValue >= _satValue
-                            ? (newValue - _satValue).toInt()
-                            : (_satValue - newValue).toInt());
+                      imageHSV,
+                      newValue.toInt(),
+                    );
                     _satValue = newValue;
                   });
                 },
@@ -114,10 +99,9 @@ class _Task3PageState extends State<Task3Page> {
                 onChanged: (double newValue) {
                   setState(() {
                     _changeVal(
-                        imageHSV,
-                        newValue > _valValue
-                            ? (newValue - _valValue).toInt()
-                            : (_valValue - newValue).toInt());
+                      imageHSV,
+                      newValue.toInt(),
+                    );
                     _valValue = newValue;
                   });
                 },
@@ -141,17 +125,22 @@ img_lib.Image convertToHSV(img_lib.Image src) {
   return src;
 }
 
-img_lib.Image convertToRGB(img_lib.Image src) {
+img_lib.Image convertToRGB(
+  img_lib.Image src,
+) {
   final p = src.getBytes();
   final Uint8List res = Uint8List.fromList(p);
   for (var i = 0, len = res.length; i < len; i += 4) {
     final l = HSVToRGB(
-        res[i].toDouble(), res[i + 1].toDouble(), res[i + 2].toDouble());
-    p[i] = l.red;
-    p[i + 1] = l.green;
-    p[i + 2] = l.blue;
+      res[i].toDouble() / 255 * 360,
+      res[i + 1].toDouble() / 255 * 100,
+      res[i + 2].toDouble() / 255 * 100,
+    );
+    res[i] = l.red;
+    res[i + 1] = l.green;
+    res[i + 2] = l.blue;
   }
-  return img_lib.Image.fromBytes(src.width, src.height, p);
+  return img_lib.Image.fromBytes(src.width, src.height, res);
 }
 
 MyHSVColor RGBtoHSV(int r1, int g1, int b1) {
@@ -181,15 +170,45 @@ MyHSVColor RGBtoHSV(int r1, int g1, int b1) {
     hue = (60 * ((r - g) / denominator) + 240) % 360;
   }
 
-  return MyHSVColor(hue.toInt(), saturation.toInt(), value.toInt());
+  final int h_256 = ((hue / 360) * 255).toInt();
+  final int s_256 = ((saturation / 100) * 255).toInt();
+  final int v_256 = ((value / 100) * 255).toInt();
+
+  return MyHSVColor(h_256, s_256, v_256);
 }
 
-Color HSVToRGB(double H, double S, double V) {
+Color HSVToRGB(
+  double H,
+  double S,
+  double V,
+) {
   int R, G, B;
 
-  H = (H % 360) / 360;
-  S = S > 100 ? 100 : S / 100;
-  V = V > 100 ? 100 : V / 100;
+  H += _hueValue;
+  S += _satValue;
+  V += _valValue;
+
+  if (H < 0) {
+    H = (360 + H) % 365;
+  } else if (H > 365) {
+    H = H % 365;
+  }
+
+  if (S < 0) {
+    S = 0;
+  } else if (S > 100) {
+    S = 100;
+  }
+
+  if (V < 0) {
+    V = 0;
+  } else if (V > 100) {
+    V = 100;
+  }
+
+  H /= 360;
+  S /= 100;
+  V /= 100;
 
   if (S == 0) {
     R = (V * 255).toInt();
@@ -240,27 +259,15 @@ Color HSVToRGB(double H, double S, double V) {
 }
 
 void _changeHue(img_lib.Image image, int value) {
-  final p = image.getBytes();
-  for (var i = 0, len = p.length; i < len; i += 4) {
-    p[i] = p[i] + value;
-  }
-  return;
+  File('test.jpg').writeAsBytesSync(img_lib.encodeJpg(convertToRGB(image)));
 }
 
 void _changeSat(img_lib.Image image, int value) {
-  final p = image.getBytes();
-  for (var i = 0, len = p.length; i < len; i += 4) {
-    p[i + 1] = (p[i + 1] + value);
-  }
-  return;
+  File('test.jpg').writeAsBytesSync(img_lib.encodeJpg(convertToRGB(image)));
 }
 
 void _changeVal(img_lib.Image image, int value) {
-  final p = image.getBytes();
-  for (var i = 0, len = p.length; i < len; i += 4) {
-    p[i + 2] = p[i + 2] + value;
-  }
-  return;
+  File('test.jpg').writeAsBytesSync(img_lib.encodeJpg(convertToRGB(image)));
 }
 
 class MyHSVColor {
